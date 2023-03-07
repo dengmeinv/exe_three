@@ -1,38 +1,59 @@
-/*
+/**
  * author:stardust
- * date:2022-03-22
+ * date:2023-03-07
+ * verstion 0.5
  *
  * the implementation of class FindDialog using modern c++ and Qt6
- */
+*/
 #include "finddialog.h"
 #include <QtWidgets>
+#include <QtDebug>
 
 FindDialog::FindDialog(QWidget *parent)
-    : QDialog{parent},
-      _label {new QLabel(tr("Find &what"))},
-      _lineEdit {new QLineEdit()},
-      _caseCheckBox {new QCheckBox(tr("Match &case"))},
-      _backwardCheckBox {new QCheckBox(tr("Search &backward"))},
-      _findButton {new QPushButton(tr("Find"))},
-      _closeButton {new QPushButton(tr("Close"))}
+    : QDialog(parent)
 {
-    _label->setBuddy(_lineEdit);
+    QLabel * l = new QLabel(tr("Find &what"));
+    l->setObjectName(QString{"label"});
 
-    _findButton -> setEnabled(false);
-    _findButton -> setDefault(true);
+    QLineEdit *le = new QLineEdit();
+    le->setObjectName(QString{"lineEdit"});
+
+    l->setBuddy(le);
+
+    QPushButton *fb = new QPushButton(tr("Find"));
+    fb->setObjectName(QString{"findButton"});
+
+    QPushButton *cb = new QPushButton(tr("Close"));
+    cb->setObjectName(QString{"closeButton"});
+
+    fb -> setEnabled(false);
+    fb -> setDefault(true);
+
+    connect(le, &QLineEdit::textChanged,
+            this, &FindDialog::enableFindButton);
+    connect(fb, &QPushButton::clicked,
+            this, &FindDialog::findClicked);
+    connect(cb, &QPushButton::clicked,
+            this, &FindDialog::close);
+
+    QCheckBox *caseCheckBox = new QCheckBox(tr("Match &case"));
+    caseCheckBox->setObjectName(QString{"caseCheckBox"});
+
+    QCheckBox *backwardCheckBox = new QCheckBox(tr("Search &backward"));
+    backwardCheckBox->setObjectName(QString{"backwardCheckBox"});
 
     QHBoxLayout *topleftLayout = new QHBoxLayout();
-    topleftLayout ->addWidget(_label);
-    topleftLayout ->addWidget(_lineEdit);
+    topleftLayout ->addWidget(l);
+    topleftLayout ->addWidget(le);
 
     QVBoxLayout *leftLayout = new QVBoxLayout();
     leftLayout ->addLayout(topleftLayout);
-    leftLayout ->addWidget(_caseCheckBox);
-    leftLayout ->addWidget(_backwardCheckBox);
+    leftLayout ->addWidget(caseCheckBox);
+    leftLayout ->addWidget(backwardCheckBox);
 
     QVBoxLayout *rightLayout = new QVBoxLayout();
-    rightLayout ->addWidget(_findButton);
-    rightLayout ->addWidget(_closeButton);
+    rightLayout ->addWidget(fb);
+    rightLayout ->addWidget(cb);
     rightLayout ->addStretch();
 
     QHBoxLayout *mainLayout = new QHBoxLayout();
@@ -43,13 +64,6 @@ FindDialog::FindDialog(QWidget *parent)
 
     setWindowTitle(tr("Find"));
     setFixedHeight(sizeHint().height());
-
-    connect(_lineEdit, &QLineEdit::textChanged,
-            this, &FindDialog::enableFindButton);
-    connect(_findButton, &QPushButton::clicked,
-            this, &FindDialog::findClicked);
-    connect(_closeButton, &QPushButton::clicked,
-            this, &FindDialog::close);
 }
 
 FindDialog::~FindDialog()
@@ -59,21 +73,26 @@ FindDialog::~FindDialog()
 
 void FindDialog::enableFindButton(const QString &text)
 {
-    _findButton ->setEnabled(!(text.isEmpty()));
+    QPushButton *findButton = findChild<QPushButton*>(QString{"findButton"});
+    findButton ->setEnabled(!(text.isEmpty()));
 }
 
 void FindDialog::findClicked()
 {
+    QCheckBox *caseCheckBox = findChild<QCheckBox*>(QString{"caseCheckBox"});
     Qt::CaseSensitivity cs =
-            _caseCheckBox->isChecked() ? Qt::CaseSensitive
+            caseCheckBox->isChecked() ? Qt::CaseSensitive
                                        : Qt::CaseInsensitive;
-    if(_caseCheckBox->isChecked())
+    if(caseCheckBox->isChecked())
         cs = Qt::CaseSensitive;
     else
         cs = Qt::CaseInsensitive;
 
-    QString text = _lineEdit->text();
-    if(_backwardCheckBox->isChecked()){
+    QLineEdit *lineEdit = findChild<QLineEdit *>(QString{"lineEdit"});
+    QString text = lineEdit->text();
+
+    QCheckBox *backwardCheckBox = findChild<QCheckBox *>(QString{"backwardCheckBox"});
+    if(backwardCheckBox->isChecked()){
         emit findPrevious(text, cs);
         qDebug() << "Singal findPrevious is emitted.";
     }

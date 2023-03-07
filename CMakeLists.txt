@@ -11,8 +11,8 @@ qt_add_executable(finddialog)
 target_sources(finddialog
     PRIVATE
         main.cpp
-        finddialog.cpp
-        finddialog.h
+#        finddialog.cpp
+#        finddialog.h
         
     PUBLIC
         
